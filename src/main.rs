@@ -11,7 +11,7 @@ use {defmt_rtt as _, panic_probe as _};
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Input, Level, Output, Pull, Speed};
 use embassy_time::{Duration, Timer};
-use fmt::info;
+use fmt::*;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
