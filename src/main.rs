@@ -17,13 +17,16 @@ use fmt::*;
 async fn main(_spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    let mut led = Output::new(p.PC13, Level::High, Speed::Low);
+    let mut led_blue = Output::new(p.PC13, Level::High, Speed::Low);
+    let mut led_red = Output::new(p.PB8, Level::Low, Speed::Low);
+    let mut led_warning = Output::new(p.PB10, Level::Low, Speed::Low);
+
     let btn = Input::new(p.PA0, Pull::Up);
 
     const SEQ_TIME_MS: usize = 5000;
     const TICK_TIME_MS: usize = 100;
     const TICKS: usize = SEQ_TIME_MS / TICK_TIME_MS;
-    const MIN_IGNORED_TICKS_AFTER_RECORDING: usize = 3;
+    const MIN_IGNORED_TICKS_AFTER_RECORDING: usize = 5;
 
     let mut levels = [Level::High; TICKS];
     let mut tick = 0;
@@ -33,7 +36,9 @@ async fn main(_spawner: Spawner) {
     loop {
         info!("btn level: {}", btn.get_level());
 
-        led.set_level(levels[tick]);
+        led_blue.set_level(levels[tick]);
+        led_red.set_level(levels[tick]);
+
         tick += 1;
         if tick >= levels.len() {
             tick = 0;
@@ -48,9 +53,14 @@ async fn main(_spawner: Spawner) {
             info!("recording {}/{}", i, TICKS);
             let btn_level = btn.get_level();
             *saved_level = btn_level;
-            led.set_level(btn_level);
+
+            led_blue.set_level(btn_level);
+            led_red.set_level(btn_level);
+
             wait().await;
         }
+
+        led_warning.set_high();
 
         for _ in 0..MIN_IGNORED_TICKS_AFTER_RECORDING {
             wait().await;
@@ -58,8 +68,11 @@ async fn main(_spawner: Spawner) {
 
         // prevent accidental restart of recording: if button is still pressed, wait until it's released
         while btn.is_low() {
+            led_warning.toggle();
             wait().await;
         }
+
+        led_warning.set_low();
 
         tick = 0;
         wait().await;
