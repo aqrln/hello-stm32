@@ -36,6 +36,7 @@ async fn main(_spawner: Spawner) {
     loop {
         info!("btn level: {}", btn.get_level());
 
+        info!("replaying {}/{}: {}", tick, TICKS, levels[tick]);
         led_blue.set_level(levels[tick]);
         led_red.set_level(levels[tick]);
 
